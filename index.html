@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Dinner Index — 6529 Meme Edition</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<style>
+:root{
+  --salmon:#FCD0A4;--dark:#1A1A18;--mid:#2D2D2B;--grey:#6B6B68;
+  --lgrey:#E8E4DC;--rule:#C8C3B8;--red:#CC0000;--teal:#0E6B75;--gold:#A67C00;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#F5F0E8;color:var(--dark);font-family:'Source Serif 4',Georgia,serif;font-size:15px;line-height:1.65;}
+
+.masthead{background:var(--dark);padding:10px 0 8px;text-align:center;border-bottom:3px solid var(--gold);}
+.masthead-title{font-family:'Playfair Display',serif;font-size:12px;color:var(--salmon);letter-spacing:4px;text-transform:uppercase;}
+.masthead-sub{font-size:10px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+
+.page{max-width:1120px;margin:0 auto;padding:0 24px;}
+
+.hl{border-bottom:3px double var(--dark);padding:30px 0 18px;margin-bottom:24px;}
+.kicker{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:8px;}
+h1{font-family:'Playfair Display',serif;font-size:clamp(28px,5vw,58px);font-weight:900;line-height:1.07;margin-bottom:10px;}
+.sub{font-size:16px;font-style:italic;color:var(--grey);max-width:720px;line-height:1.5;font-weight:300;}
+
+.byline{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:7px 0;margin-bottom:26px;font-size:11px;color:var(--grey);letter-spacing:.5px;}
+.byline strong{text-transform:uppercase;}
+
+.intro-grid{display:grid;grid-template-columns:2fr 1fr;gap:40px;margin-bottom:32px;}
+.intro-text p{margin-bottom:14px;color:var(--mid);font-size:15.5px;}
+.intro-text p:first-child::first-letter{font-family:'Playfair Display',serif;font-size:58px;font-weight:900;float:left;line-height:.85;margin:6px 8px 0 0;}
+
+.box{background:var(--dark);color:#E8E4DC;padding:20px;font-size:13px;line-height:1.65;}
+.box h3{font-family:'Playfair Display',serif;font-size:15px;color:var(--salmon);margin-bottom:10px;font-style:italic;}
+.ml{background:rgba(255,255,255,.08);padding:6px 10px;margin:5px 0;font-size:13px;border-left:2px solid var(--gold);}
+
+.sh{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;border-top:3px solid var(--dark);padding-top:12px;margin:36px 0 16px;}
+
+/* MAP */
+.map-wrap{background:white;border:1px solid var(--rule);overflow:hidden;margin-bottom:8px;}
+.map-ctrl{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--lgrey);border-bottom:1px solid var(--rule);flex-wrap:wrap;gap:8px;}
+.map-ctrl label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--grey);font-weight:700;margin-right:4px;}
+.btng button{background:white;border:1px solid var(--rule);padding:4px 12px;font-size:11px;cursor:pointer;font-family:'Source Serif 4',serif;color:var(--dark);transition:all .15s;}
+.btng button.on,.btng button:hover{background:var(--dark);color:var(--salmon);border-color:var(--dark);}
+#msv{width:100%;display:block;}
+.cpth{fill:#DDD6C6;stroke:#B8B0A0;stroke-width:.35px;}
+.grat{fill:none;stroke:#B8CCDA;stroke-width:.25px;}
+.map-leg{padding:9px 16px;background:var(--lgrey);border-top:1px solid var(--rule);display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--grey);}
+.li{display:flex;align-items:center;gap:5px;}
+.ld{width:11px;height:11px;border-radius:50%;border:1px solid rgba(0,0,0,.15);}
+
+#tt{position:fixed;background:var(--dark);color:#E8E4DC;padding:11px 15px;font-size:12.5px;pointer-events:none;display:none;z-index:9999;min-width:190px;border-top:3px solid var(--gold);line-height:1.75;box-shadow:3px 3px 12px rgba(0,0,0,.35);}
+#tt strong{display:block;font-family:'Playfair Display',serif;font-size:15px;color:var(--salmon);margin-bottom:2px;}
+#tt .mv{color:var(--gold);font-weight:700;}
+
+.cap{font-size:11.5px;color:var(--grey);font-style:italic;margin-top:6px;border-left:2px solid var(--rule);padding-left:8px;margin-bottom:28px;}
+
+/* TABLE */
+.dtw{overflow-x:auto;margin-bottom:8px;}
+table{width:100%;border-collapse:collapse;font-size:13.5px;}
+thead tr{background:var(--dark);color:var(--salmon);}
+th{font-family:'Source Serif 4',serif;font-weight:700;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;padding:9px 12px;text-align:left;white-space:nowrap;}
+th.r,td.r{text-align:right;}
+tbody tr{border-bottom:1px solid var(--rule);}
+tbody tr:hover{background:rgba(252,208,164,.15);}
+tbody tr.alt{background:rgba(0,0,0,.025);}
+td{padding:7px 12px;vertical-align:middle;}
+td.cn{font-weight:700;font-family:'Playfair Display',serif;font-size:14px;}
+.tb{display:inline-block;padding:2px 7px;font-size:10px;letter-spacing:.5px;text-transform:uppercase;font-weight:700;border-radius:2px;}
+.t1{background:#7A0000;color:#fff;} .t2{background:#CC4400;color:#fff;}
+.t3{background:#B07700;color:#fff;} .t4{background:#3D7A3D;color:#fff;} .t5{background:#2B5A8B;color:#fff;}
+.mb{display:inline-block;height:8px;vertical-align:middle;margin-right:5px;opacity:.75;}
+
+/* PULL QUOTE */
+.pq{border-top:3px solid var(--dark);border-bottom:3px solid var(--dark);padding:24px 0;margin:36px 0;display:grid;grid-template-columns:100px 1fr;gap:24px;align-items:center;}
+.av{width:90px;height:90px;border-radius:50%;overflow:hidden;border:3px solid var(--gold);flex-shrink:0;}
+.pq-txt p{font-family:'Playfair Display',serif;font-size:clamp(15px,2.3vw,23px);font-style:italic;line-height:1.42;color:var(--dark);}
+.pq-txt cite{display:block;margin-top:8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--grey);font-style:normal;}
+.pq-txt cite em{color:var(--dark);font-style:italic;}
+
+/* BAR CHART */
+.cr{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.cl{width:150px;text-align:right;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.co{flex:1;background:var(--lgrey);height:17px;}
+.ci{height:100%;}
+.cv{width:70px;font-size:11px;color:var(--grey);}
+
+/* SEARCH */
+.sw{display:flex;gap:10px;align-items:center;margin-bottom:12px;}
+.sw input{border:1px solid var(--rule);padding:6px 12px;font-size:13px;font-family:'Source Serif 4',serif;background:white;flex:1;max-width:300px;outline:none;color:var(--dark);}
+.sw input:focus{border-color:var(--dark);}
+
+.nb{background:var(--lgrey);border-left:3px solid var(--gold);padding:13px 17px;font-size:12.5px;color:var(--grey);margin-bottom:24px;line-height:1.7;}
+.nb strong{color:var(--dark);}
+
+.dv{font-size:12px;max-width:200px;overflow:hidden;line-height:1.4;}
+
+footer{border-top:3px double var(--dark);padding:16px 0 32px;margin-top:48px;font-size:11px;color:var(--grey);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+
+@media(max-width:680px){
+  .intro-grid{grid-template-columns:1fr;}
+  .pq{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="masthead-title">ANDIG &mdash; A Nice Dinner Index Global</div>
+  <div class="masthead-sub">6529 Meme Collector Edition &middot; Volume I &middot; March 2026 &middot; Peer-Reviewed by The Dinner Desk</div>
+</div>
+
+<div class="page">
+
+<!-- HEADLINE -->
+<div class="hl">
+  <div class="kicker">ANDIG &middot; Special Report &middot; Global Dining Economics &amp; Digital Asset Opportunity Cost</div>
+  <h1>A Nice Dinner Index Global<br><span style="font-size:clamp(18px,3vw,34px);font-weight:400;font-style:italic;color:var(--grey);">The 6529 Meme Card Collector Edition</span></h1>
+  <p class="sub">Formally establishing the global cost of a pleasant evening out — denominated in 6529 Meme Cards — and its implications for the long-run wellbeing of those who have chosen digital ownership over human connection</p>
+</div>
+
+<div class="byline">
+  <strong>ANDIG &middot; Vol. I &middot; The Dinner Desk, Global Research Division</strong>
+  <span style="font-style:italic;">March 4, 2026 &middot; All prices USD &middot; ETH $2,000 &middot; 1 Meme = $130.58</span>
+</div>
+
+<!-- INTRO -->
+<div class="intro-grid">
+  <div class="intro-text">
+    <p>The question before us is not an economic one. It is, at its core, a question of judgment — and, increasingly, of concern. Since 2021, a cohort of otherwise apparently rational individuals has chosen to direct meaningful portions of their liquid net worth toward the acquisition of 6529 Meme Cards: digital tokens, however artistically distinguished, that cannot be eaten, poured, or shared across a candlelit table. The <em>A Nice Dinner Index Global</em> (ANDIG) was established to measure, formally and with appropriate gravity, what precisely has been foregone in the pursuit of on-chain completeness.</p>
+    <p>The index measures the cost of a standard "nice dinner" — defined as a meal for two with wine, at an establishment where the tablecloths are ironed and the sommelier is not visibly alarmed by your presence — across 69 cities and notable towns worldwide. These prices are then expressed in units of 6529 Meme Cards (0.06529 ETH each, or $130.58 at current prices). The result is a single, sobering number: the memes-per-dinner rate. In Monaco it stands at 3.98. In Hanoi, a merciful 0.31.</p>
+    <p>What concerns the editors of ANDIG is not the acquisition of digital art per se. It is the cumulative arithmetic. Consider <em>gpebbles</em>, holder of 3,161 cards: at New York dinner prices, that represents 1,377 evenings across a table with people they presumably care about — nearly four years of nightly dinners, unordered. Or <em>Fitzcarraldo</em>, with 618 cards, whose 269 foregone dinners suggest a person acquainted with grand obsessive quests, if not with adequate nutrition. <em>RegularDad</em> (541 cards, 236 dinners missed) raises particular editorial concern. The question one must put to each of them — gently, but with genuine solicitude — is whether their future self, older and perhaps wiser, will look back on those evenings not taken and find the on-chain ledger adequate compensation.</p>
+    <p>For the dedicated 6529 collector, this index offers an uncomfortable mirror. Those holding hundreds of cards have, in meme-denominated terms, foregone a statistically improbable number of pleasant evenings. The dinners not taken. The conversations not had. The wine not opened.</p>
+  </div>
+  <div>
+    <!-- Certification badge -->
+    <div style="border:2px solid var(--gold);padding:16px 18px;margin-bottom:16px;text-align:center;background:white;">
+      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--grey);margin-bottom:6px;">Formally Designated</div>
+      <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--dark);letter-spacing:1px;">ANDIG</div>
+      <div style="font-size:10px;color:var(--grey);font-style:italic;margin-top:2px;">A Nice Dinner Index Global</div>
+      <div style="border-top:1px solid var(--rule);margin:10px 0 8px;"></div>
+      <div style="font-size:10px;letter-spacing:.5px;color:var(--grey);">Volume I · March 2026<br>69 Cities · 1 Meme = $130.58<br>Peer-Reviewed by The Dinner Desk</div>
+      <div style="border-top:1px solid var(--rule);margin:10px 0 8px;"></div>
+      <div style="font-size:9px;color:#aaa;font-style:italic;">Classification: Formally Concerning</div>
+    </div>
+    <!-- Sanity advisory -->
+    <div style="background:#7A0000;color:#fff;padding:14px 16px;font-size:12px;line-height:1.6;">
+      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;opacity:.7;">Editorial Advisory</div>
+      <p>The Dinner Desk formally questions the long-run wellbeing of any individual whose meme card holdings exceed the equivalent of 50 restaurant dinners. We urge all affected collectors to call someone they love and suggest dinner — this week, not after the next drop.</p>
+    </div>
+  </div>
+</div>
+
+<!-- MAP FIRST -->
+<div class="sh">The Network State, Hungry for Memes</div>
+
+<div class="map-wrap">
+  <div class="map-ctrl">
+    <div>
+      <label>Colour by:</label>
+      <div class="btng" style="display:inline-flex;">
+        <button class="on" onclick="setMode('memes',this)">Memes per Dinner</button>
+        <button onclick="setMode('usd',this)">USD Cost</button>
+        <button onclick="setMode('tier',this)">Tier</button>
+      </div>
+    </div>
+    <span style="font-size:11px;color:var(--grey);font-style:italic;">Hover a pin for details &middot; ★ = famous small town</span>
+  </div>
+  <svg id="msv"></svg>
+  <div class="map-leg">
+    <span style="font-weight:700;text-transform:uppercase;letter-spacing:1px;font-size:10px;color:var(--dark);">Memes/dinner:</span>
+    <div class="li"><div class="ld" style="background:#7A0000;"></div>3+ Ruinous</div>
+    <div class="li"><div class="ld" style="background:#CC4400;"></div>2–3 Painful</div>
+    <div class="li"><div class="ld" style="background:#B07700;"></div>1–2 Wincing</div>
+    <div class="li"><div class="ld" style="background:#3D7A3D;"></div>0.5–1 Bearable</div>
+    <div class="li"><div class="ld" style="background:#2B5A8B;"></div>&lt;0.5 Civilised</div>
+    <div class="li" style="margin-left:auto;"><div class="ld" style="background:#888;border:2px dashed #555;"></div>★ Small town</div>
+  </div>
+</div>
+<div class="cap">Fig. 1 — City dinner costs in 6529 Meme Cards (0.06529 ETH × $2,000 = $130.58/meme). Map: Natural Earth CC0 Public Domain via world-atlas. Pin size proportional to dinner cost. 69 locations.</div>
+
+<!-- PULL QUOTE -->
+<div class="pq">
+  <div class="av">
+    <svg viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
+      <rect width="90" height="90" fill="#1A1A18"/>
+      <!-- body/suit -->
+      <rect x="12" y="65" width="66" height="30" fill="#243354"/>
+      <ellipse cx="45" cy="74" rx="32" ry="16" fill="#243354"/>
+      <!-- shirt -->
+      <rect x="38" y="65" width="14" height="25" fill="white" opacity=".9"/>
+      <!-- tie -->
+      <polygon points="45,67 42,74 45,82 48,74" fill="#CC4400"/>
+      <!-- neck -->
+      <rect x="39" y="59" width="12" height="10" fill="#C8936A"/>
+      <!-- head -->
+      <ellipse cx="45" cy="44" rx="21" ry="23" fill="#C8936A"/>
+      <!-- hair -->
+      <ellipse cx="45" cy="23" rx="21" ry="10" fill="#111"/>
+      <rect x="24" y="24" width="42" height="8" fill="#111"/>
+      <!-- side burns / slight stubble -->
+      <rect x="24" y="34" width="4" height="12" fill="#333" opacity=".5"/>
+      <rect x="62" y="34" width="4" height="12" fill="#333" opacity=".5"/>
+      <!-- ears -->
+      <ellipse cx="24" cy="44" rx="4" ry="5" fill="#B8835A"/>
+      <ellipse cx="66" cy="44" rx="4" ry="5" fill="#B8835A"/>
+      <!-- ETH earring left -->
+      <polygon points="24,48 22,52 24,56 26,52" fill="#A67C00"/>
+      <!-- glasses frames -->
+      <rect x="30" y="39" width="13" height="9" rx="2" fill="none" stroke="#A67C00" stroke-width="1.4"/>
+      <rect x="47" y="39" width="13" height="9" rx="2" fill="none" stroke="#A67C00" stroke-width="1.4"/>
+      <line x1="43" y1="43" x2="47" y2="43" stroke="#A67C00" stroke-width="1.4"/>
+      <line x1="24" y1="43" x2="30" y2="43" stroke="#A67C00" stroke-width="1.4"/>
+      <line x1="60" y1="43" x2="66" y2="43" stroke="#A67C00" stroke-width="1.4"/>
+      <!-- eyes -->
+      <circle cx="37" cy="43" r="3" fill="white"/>
+      <circle cx="53" cy="43" r="3" fill="white"/>
+      <circle cx="38" cy="44" r="1.8" fill="#111"/>
+      <circle cx="54" cy="44" r="1.8" fill="#111"/>
+      <!-- nose -->
+      <path d="M43 50 Q45 54 47 50" stroke="#9A6540" stroke-width="1" fill="none"/>
+      <!-- knowing smirk -->
+      <path d="M38 57 Q45 63 52 57" stroke="#8A5535" stroke-width="1.4" fill="none"/>
+      <!-- ETH lapel pin -->
+      <polygon points="20,70 18,74 20,78 22,74" fill="#A67C00" opacity=".9"/>
+      <!-- fork in breast pocket (the "CryptoFork") -->
+      <rect x="58" y="66" width="2" height="10" fill="#A67C00" opacity=".8"/>
+      <rect x="57" y="66" width="1" height="4" fill="#A67C00" opacity=".8"/>
+      <rect x="60" y="66" width="1" height="4" fill="#A67C00" opacity=".8"/>
+    </svg>
+  </div>
+  <div class="pq-txt">
+    <p>"A collector holding 500 meme cards has, in opportunity-cost terms, declined 65 dinners at a decent London restaurant. We note that <em>BatSoupYum</em>, <em>SofaKingRekt</em>, and <em>VincentVanDough</em> each hold more than this. One hopes the on-chain provenance was worth the cold soup."</p>
+    <cite><em>CryptoFork Buffet</em> &mdash; Dinner Correspondent &amp; Accidental Economist &middot; The Dinner Desk, Est. 2026</cite>
+  </div>
+</div>
+
+<!-- FOREGONE DINING INFOGRAPHIC -->
+<div class="sh">What Was Lost in 2025 Alone</div>
+
+<div class="nb" style="margin-bottom:20px;">
+  <strong>Estimation note:</strong> The following figures are based on verified holdings data for the top 250 collectors by card balance (source: 6529 network, March 2026). Aggregate holdings: <strong>149,091 meme cards</strong>. We apply a weighted global average dinner cost of $185 — the ANDIG Global Weighted Mean (<strong>GWM-185</strong>). One dinner = one starter, one main, one dessert, half a bottle of wine per person.
+</div>
+
+<div id="infographic">
+  <!-- Rendered by JS below -->
+</div>
+<div class="cap">Fig. 3 — Dining experiences foregone by the top 250 ANDIG holders (149,091 verified meme cards, source: 6529 network data, March 2026), calculated against the GWM-185 global weighted dinner cost of $185. The emotional cost is incalculable.</div>
+
+<!-- TABLE -->
+<div class="sh">The Full Table — 69 Cities &amp; Towns</div>
+<div class="sw">
+  <input type="text" id="csrch" placeholder="Search city or country…" oninput="flt()">
+  <span id="rct" style="font-size:11px;color:var(--grey);"></span>
+</div>
+<div class="dtw">
+  <table>
+    <thead><tr>
+      <th></th><th>City</th><th>Country</th>
+      <th class="r">Dinner (USD)</th><th class="r">Memes Req.</th>
+      <th>Tier</th><th>Bar</th><th>Note</th>
+    </tr></thead>
+    <tbody id="ctbody"></tbody>
+  </table>
+</div>
+<div class="cap">Dinner for two with wine. Memes at $130.58. ★ = famous small towns added for editorial amusement.</div>
+<!-- BAR CHART -->
+<div class="sh">Top 20 Most Expensive Cities — in Memes</div>
+<div id="bchart" style="margin-bottom:8px;"></div>
+<div class="cap">Fig. 2 — Memes required per dinner, top 20 cities. One meme = $130.58 at current ETH prices.</div>
+
+<!-- HOLDER TABLE -->
+<div class="sh">The Collector's Ledger: Dinners Not Eaten</div>
+<div class="nb">
+  <strong>Data source:</strong> Top 250 holders by card balance, sourced from 6529 network data (March 2026). Total verified holdings: <strong>149,091 meme cards</strong>. NYC dinner baseline = $300 for two, wine included. Holders without a registered handle are shown by wallet address prefix.
+</div>
+<div class="dtw">
+  <table>
+    <thead><tr>
+      <th>#</th><th>Wallet / Handle</th>
+      <th class="r">Memes Held</th><th class="r">Value (USD)</th>
+      <th class="r">NYC Dinners Foregone</th><th class="r">Per Year (4yr avg)</th>
+      <th>Dinner Deficit</th>
+    </tr></thead>
+    <tbody id="htbody"></tbody>
+  </table>
+</div>
+<div class="cap">Fig. 4 — Top 250 holders by card balance, sourced from 6529 network data (March 2026). NYC dinner = $300 for two with wine. 🍽️ = every 5 dinners foregone (capped at 40 icons). Holders without handles shown by wallet prefix.</div>
+
+<!-- METHODOLOGY -->
+<div class="sh">ANDIG Methodology &amp; Technical Notes</div>
+<div class="intro-grid" style="margin-bottom:0;">
+  <div>
+    <p style="color:var(--mid);font-size:15px;margin-bottom:14px;">The <em>A Nice Dinner Index Global</em> was constructed following a review of international dining cost benchmarks across 69 cities and notable small towns, representing all inhabited continents. The index is denominated in 6529 Meme Cards rather than a fiat currency in order to make the opportunity cost viscerally legible to the collector community.</p>
+    <p style="color:var(--mid);font-size:15px;margin-bottom:14px;">A "nice dinner" is defined as a meal for two at a well-regarded restaurant — not necessarily Michelin-starred, but aspirational — inclusive of a shared starter, individual main courses, a dessert course, and a bottle of wine priced in the lower-middle range of the establishment's list. Service charge is included where customary. Gratuity is the diner's own affair.</p>
+    <p style="color:var(--mid);font-size:15px;margin-bottom:14px;">City prices are drawn from Numbeo cost-of-living survey data, local hospitality industry benchmarks, and the editorial judgment of the Dinner Desk's Global Correspondents, who have conducted field research at personal expense and claim no reimbursement. Famous small towns (marked ★) are included for comparative illustration and to ensure no collector believes remote geography provides relief from the index.</p>
+    <p style="color:var(--grey);font-size:13px;font-style:italic;">ANDIG does not constitute financial advice, investment guidance, or dietary counsel. The Dinner Desk accepts no liability for dinners missed, relationships strained, or wallets drained. Past dinner prices do not predict future dinner prices. ETH volatility is the collector's own problem.</p>
+  </div>
+  <div>
+    <div class="box">
+      <h3>Index Construction</h3>
+      <div class="ml">1 Meme Card = 0.06529 ETH</div>
+      <div class="ml">ETH spot price = $2,000.00</div>
+      <div class="ml">1 Meme Card = <strong style="color:var(--salmon)">$130.58 USD</strong></div>
+      <div class="ml">GWM-185 = $185 (global weighted mean dinner)</div>
+      <div class="ml">Baseline city = New York, NY ($300/dinner)</div>
+      <br>
+      <p style="font-size:12px;">Tiers assigned by memes-per-dinner quartile across the full 69-location sample. Ruinous (≥3 memes), Painful (2–3), Wincing (1–2), Bearable (0.5–1), Civilised (&lt;0.5).</p>
+      <br>
+      <p style="font-size:11px;color:#777;font-style:italic;">Classification threshold for editorial concern: holdings equivalent to &gt;50 NYC dinners. Currently: most top-100 holders.</p>
+    </div>
+  </div>
+</div>
+
+
+<div class="nb" style="margin-top:28px;">
+  <strong>ANDIG Sources &amp; Disclaimers:</strong> Dinner prices sourced from Numbeo cost-of-living index, Michelin restaurant averages, local hospitality benchmarks, and the field research of the Dinner Desk's global correspondents (who claim no reimbursement). ETH: $2,000 (March 4, 2026). 1 Meme = 0.06529 ETH = $130.58. Map data: Natural Earth (CC0 Public Domain). Holder data: 6529 network, March 2026 — top 250 by card balance, 149,091 cards verified. GWM-185 is a proprietary ANDIG weighted average across all 69 surveyed cities. ANDIG is not investment advice, financial advice, or a substitute for calling your mother and suggesting dinner.
+</div>
+
+<footer>
+  <span>© 2026 ANDIG &middot; A Nice Dinner Index Global &middot; The Dinner Desk · Vol. I</span>
+  <span>Map: Natural Earth · CC0 Public Domain</span>
+  <span>ETH $2,000 &middot; 1 Meme $130.58 &middot; A Nice Dinner: Priceless</span>
+</footer>
+
+</div>
+
+<div id="tt"></div>
+
+<script>
+const MEME_USD = 2000 * 0.06529; // 130.58
+const NYC = 300;
+
+const cities = [
+  {name:"Monaco",        country:"Monaco",         flag:"🇲🇨", d:520, lat:43.74,  lng:7.42},
+  {name:"St. Moritz",    country:"Switzerland ★",  flag:"🇨🇭", d:510, lat:46.50,  lng:9.84,   s:1, note:"Ski season pricing year-round"},
+  {name:"Verbier",       country:"Switzerland ★",  flag:"🇨🇭", d:490, lat:46.10,  lng:7.23,   s:1, note:"Après-ski surcharge baked in"},
+  {name:"Singapore",     country:"Singapore",      flag:"🇸🇬", d:490, lat:1.35,   lng:103.82,     note:"Marina Bay invisible surcharge"},
+  {name:"Zurich",        country:"Switzerland",    flag:"🇨🇭", d:480, lat:47.38,  lng:8.54,       note:"CHF rounds up, always"},
+  {name:"Maldives",      country:"Maldives ★",     flag:"🇲🇻", d:460, lat:4.17,   lng:73.51,  s:1, note:"Overwater bungalow tariff"},
+  {name:"Geneva",        country:"Switzerland",    flag:"🇨🇭", d:460, lat:46.20,  lng:6.15,       note:"Diplomat pricing"},
+  {name:"Oslo",          country:"Norway",         flag:"🇳🇴", d:450, lat:59.91,  lng:10.75,      note:"Oil wealth menu pricing"},
+  {name:"Copenhagen",    country:"Denmark",        flag:"🇩🇰", d:430, lat:55.68,  lng:12.57,      note:"The Noma effect lingers"},
+  {name:"Portofino",     country:"Italy ★",        flag:"🇮🇹", d:420, lat:44.30,  lng:9.21,   s:1, note:"Yacht parking not included"},
+  {name:"Tokyo",         country:"Japan",          flag:"🇯🇵", d:400, lat:35.67,  lng:139.77,     note:"Ginza omakase-adjacent pricing"},
+  {name:"London",        country:"United Kingdom", flag:"🇬🇧", d:390, lat:51.51,  lng:-0.13,      note:"Mayfair baseline; service charge chaos"},
+  {name:"Capri",         country:"Italy ★",        flag:"🇮🇹", d:390, lat:40.55,  lng:14.24,  s:1, note:"No cars, no sympathy"},
+  {name:"Aspen",         country:"USA ★",          flag:"🇺🇸", d:380, lat:39.19,  lng:-106.82,s:1, note:"$15 green juice excluded"},
+  {name:"Sydney",        country:"Australia",      flag:"🇦🇺", d:380, lat:-33.87, lng:151.21,     note:"Harbour view tax"},
+  {name:"Positano",      country:"Italy ★",        flag:"🇮🇹", d:340, lat:40.63,  lng:14.49,  s:1, note:"Cliff-face pricing policy"},
+  {name:"San Francisco", country:"USA",            flag:"🇺🇸", d:340, lat:37.77,  lng:-122.42,    note:"Tech tip culture"},
+  {name:"Dubai",         country:"UAE",            flag:"🇦🇪", d:340, lat:25.20,  lng:55.27,      note:"Alcohol licence adds 40%"},
+  {name:"Nantucket",     country:"USA ★",          flag:"🇺🇸", d:350, lat:41.28,  lng:-70.10, s:1, note:"Clam chowder included, barely"},
+  {name:"Hong Kong",     country:"China / HK",     flag:"🇭🇰", d:370, lat:22.32,  lng:114.17,     note:"Dim sum excluded from index"},
+  {name:"Paris",         country:"France",         flag:"🇫🇷", d:360, lat:48.87,  lng:2.31,       note:"8th arr. tourist premium"},
+  {name:"Stockholm",     country:"Sweden",         flag:"🇸🇪", d:350, lat:59.33,  lng:18.07,      note:"Aquavit economy"},
+  {name:"Montauk",       country:"USA ★",          flag:"🇺🇸", d:290, lat:41.04,  lng:-71.95, s:1, note:"East End privilege premium"},
+  {name:"New York",      country:"USA",            flag:"🇺🇸", d:300, lat:40.71,  lng:-74.01,     note:"Ledger baseline city"},
+  {name:"Los Angeles",   country:"USA",            flag:"🇺🇸", d:280, lat:34.05,  lng:-118.24,    note:"Valet parking excluded"},
+  {name:"Mykonos",       country:"Greece ★",       flag:"🇬🇷", d:280, lat:37.45,  lng:25.33,  s:1, note:"Sunset table surcharge"},
+  {name:"Miami",         country:"USA",            flag:"🇺🇸", d:270, lat:25.77,  lng:-80.20,     note:"South Beach premium"},
+  {name:"Toronto",       country:"Canada",         flag:"🇨🇦", d:260, lat:43.65,  lng:-79.38,     note:"Housing crisis on the menu"},
+  {name:"Amsterdam",     country:"Netherlands",    flag:"🇳🇱", d:250, lat:52.37,  lng:4.90,       note:"Canal-side premium"},
+  {name:"Chicago",       country:"USA",            flag:"🇺🇸", d:240, lat:41.88,  lng:-87.63,     note:"Steakhouse culture"},
+  {name:"Melbourne",     country:"Australia",      flag:"🇦🇺", d:240, lat:-37.81, lng:144.96,     note:"Coffee culture spillover"},
+  {name:"Vienna",        country:"Austria",        flag:"🇦🇹", d:240, lat:48.21,  lng:16.37,      note:"Imperial service, imperial prices"},
+  {name:"Ibiza",         country:"Spain ★",        flag:"🇪🇸", d:240, lat:38.91,  lng:1.43,   s:1, note:"Club entry excluded"},
+  {name:"Vancouver",     country:"Canada",         flag:"🇨🇦", d:220, lat:49.28,  lng:-123.12,    note:"Mountains justify the pricing"},
+  {name:"Tulum",         country:"Mexico ★",       flag:"🇲🇽", d:220, lat:20.21,  lng:-87.46, s:1, note:"Cenote ambience premium"},
+  {name:"Amalfi",        country:"Italy ★",        flag:"🇮🇹", d:200, lat:40.63,  lng:14.60,  s:1, note:"Limoncello mandatory"},
+  {name:"Tel Aviv",      country:"Israel",         flag:"🇮🇱", d:130, lat:32.08,  lng:34.78,      note:"Med tech tax"},
+  {name:"Riyadh",        country:"Saudi Arabia",   flag:"🇸🇦", d:120, lat:24.69,  lng:46.72,      note:"No alcohol = modest savings"},
+  {name:"Berlin",        country:"Germany",        flag:"🇩🇪", d:180, lat:52.52,  lng:13.41,      note:"Remarkably civilised"},
+  {name:"Seoul",         country:"South Korea",    flag:"🇰🇷", d:180, lat:37.57,  lng:126.98,     note:"KBBQ excluded from index"},
+  {name:"Barcelona",     country:"Spain",          flag:"🇪🇸", d:170, lat:41.39,  lng:2.16,       note:"Late dining discount (ask nicely)"},
+  {name:"Rome",          country:"Italy",          flag:"🇮🇹", d:160, lat:41.90,  lng:12.50,      note:"Coperto scandal ongoing"},
+  {name:"Shanghai",      country:"China",          flag:"🇨🇳", d:160, lat:31.23,  lng:121.47,     note:"Bund premium on all items"},
+  {name:"Beijing",       country:"China",          flag:"🇨🇳", d:150, lat:39.91,  lng:116.39,     note:"Peking duck included"},
+  {name:"Lisbon",        country:"Portugal",       flag:"🇵🇹", d:140, lat:38.72,  lng:-9.14,      note:"Gentrification in progress"},
+  {name:"Athens",        country:"Greece",         flag:"🇬🇷", d:120, lat:37.98,  lng:23.73,      note:"Mezze economy"},
+  {name:"Warsaw",        country:"Poland",         flag:"🇵🇱", d:90,  lat:52.23,  lng:21.01,      note:"Eastern European sanity"},
+  {name:"Mexico City",   country:"Mexico",         flag:"🇲🇽", d:90,  lat:19.43,  lng:-99.13,     note:"Taco-adjusted figure"},
+  {name:"Budapest",      country:"Hungary",        flag:"🇭🇺", d:85,  lat:47.50,  lng:19.04,      note:"Thermal bath not included"},
+  {name:"São Paulo",     country:"Brazil",         flag:"🇧🇷", d:85,  lat:-23.55, lng:-46.63,     note:"Rodízio excluded"},
+  {name:"Lima",          country:"Peru",           flag:"🇵🇪", d:75,  lat:-12.05, lng:-77.04,     note:"Ceviche-forward value"},
+  {name:"Bangkok",       country:"Thailand",       flag:"🇹🇭", d:75,  lat:13.75,  lng:100.52,     note:"Rooftop bar included"},
+  {name:"Prague",        country:"Czech Republic", flag:"🇨🇿", d:80,  lat:50.08,  lng:14.44,      note:"Beer exchange rate favourable"},
+  {name:"Marfa",         country:"USA ★",          flag:"🇺🇸", d:80,  lat:30.31,  lng:-104.02,s:1, note:"Prada Marfa is not a restaurant"},
+  {name:"Bali",          country:"Indonesia ★",    flag:"🇮🇩", d:80,  lat:-8.34,  lng:115.09, s:1, note:"Rice paddy view premium"},
+  {name:"Buenos Aires",  country:"Argentina",      flag:"🇦🇷", d:70,  lat:-34.61, lng:-58.44,     note:"Steak included; wine: obviously"},
+  {name:"Mumbai",        country:"India",          flag:"🇮🇳", d:80,  lat:19.08,  lng:72.88,      note:"Fine dining: relative concept"},
+  {name:"Istanbul",      country:"Türkiye",        flag:"🇹🇷", d:65,  lat:41.01,  lng:28.95,      note:"Bosphorus view surcharge"},
+  {name:"Cape Town",     country:"South Africa",   flag:"🇿🇦", d:65,  lat:-33.93, lng:18.42,      note:"Wine included (obviously)"},
+  {name:"Delhi",         country:"India",          flag:"🇮🇳", d:65,  lat:28.61,  lng:77.21,      note:"Mughal architecture surcharge"},
+  {name:"Nairobi",       country:"Kenya",          flag:"🇰🇪", d:60,  lat:-1.29,  lng:36.82,      note:"Safari-adjacent pricing"},
+  {name:"Kuala Lumpur",  country:"Malaysia",       flag:"🇲🇾", d:60,  lat:3.14,   lng:101.69,     note:"Hawker index not applicable"},
+  {name:"Bogotá",        country:"Colombia",       flag:"🇨🇴", d:55,  lat:4.71,   lng:-74.07,     note:"Altitude adjustment"},
+  {name:"Lagos",         country:"Nigeria",        flag:"🇳🇬", d:55,  lat:6.52,   lng:3.38,       note:"Jollof not included"},
+  {name:"Jakarta",       country:"Indonesia",      flag:"🇮🇩", d:55,  lat:-6.21,  lng:106.85,     note:"Traffic time excluded"},
+  {name:"Kyiv",          country:"Ukraine",        flag:"🇺🇦", d:50,  lat:50.45,  lng:30.52,      note:"Resilient dining scene"},
+  {name:"Marrakech",     country:"Morocco",        flag:"🇲🇦", d:55,  lat:31.63,  lng:-8.01,      note:"Riad premium applies"},
+  {name:"Cairo",         country:"Egypt",          flag:"🇪🇬", d:40,  lat:30.04,  lng:31.24,      note:"Nile view costs extra"},
+  {name:"Hanoi",         country:"Vietnam",        flag:"🇻🇳", d:40,  lat:21.03,  lng:105.83,     note:"Pho not included, regrettably"},
+];
+
+cities.forEach(c=>{ c.m = c.d/MEME_USD; c.ms = c.m.toFixed(2); if(!c.note)c.note=''; });
+cities.sort((a,b)=>b.d-a.d);
+const maxD = cities[0].d;
+
+function tr(m){
+  if(m>=3)  return {c:'#7A0000',l:'Ruinous',k:'t1'};
+  if(m>=2)  return {c:'#CC4400',l:'Painful', k:'t2'};
+  if(m>=1)  return {c:'#B07700',l:'Wincing', k:'t3'};
+  if(m>=.5) return {c:'#3D7A3D',l:'Bearable',k:'t4'};
+  return           {c:'#2B5A8B',l:'Civilised',k:'t5'};
+}
+
+// ── CITY TABLE ──────────────────────────────────────────
+function rTable(data){
+  const tb=document.getElementById('ctbody'); tb.innerHTML='';
+  data.forEach((c,i)=>{
+    const t=tr(c.m), bw=Math.round((c.d/maxD)*120);
+    tb.innerHTML+=`<tr class="${i%2?'':'alt'}">
+      <td style="font-size:16px;">${c.flag}</td>
+      <td class="cn">${c.name}${c.s?' <span style="font-size:10px;color:var(--grey)">★</span>':''}</td>
+      <td style="font-size:12px;color:var(--grey);">${c.country}</td>
+      <td class="r"><strong>$${c.d.toLocaleString()}</strong></td>
+      <td class="r"><strong>${c.ms}</strong></td>
+      <td><span class="tb ${t.k}">${t.l}</span></td>
+      <td><span class="mb" style="width:${bw}px;background:${t.c};"></span></td>
+      <td style="font-size:11px;color:var(--grey);font-style:italic;max-width:180px;">${c.note}</td>
+    </tr>`;
+  });
+  document.getElementById('rct').textContent=`${data.length} locations`;
+}
+function flt(){
+  const q=document.getElementById('csrch').value.toLowerCase();
+  rTable(cities.filter(c=>c.name.toLowerCase().includes(q)||c.country.toLowerCase().includes(q)));
+}
+rTable(cities);
+
+// ── BAR CHART ───────────────────────────────────────────
+const top20=[...cities].sort((a,b)=>b.m-a.m).slice(0,20);
+const maxM=top20[0].m;
+const bc=document.getElementById('bchart');
+top20.forEach(c=>{
+  const t=tr(c.m), pct=(c.m/maxM*100).toFixed(1);
+  bc.innerHTML+=`<div class="cr">
+    <div class="cl">${c.flag} ${c.name}</div>
+    <div class="co"><div class="ci" style="width:${pct}%;background:${t.c};"></div></div>
+    <div class="cv">${c.m.toFixed(2)} 🖼️</div>
+  </div>`;
+});
+
+// ── HOLDER TABLE ─────────────────────────────────────────
+const holders = [
+  {r:1, h:"6529Research", m:21504},
+  {r:2, h:"6529Museum", m:20872},
+  {r:3, h:"EthereumBurnAddress", m:7431},
+  {r:4, h:"punk6529", m:5570},
+  {r:5, h:"DGMD", m:3808},
+  {r:6, h:"gpebbles", m:3161},
+  {r:7, h:"Thor", m:2071},
+  {r:8, h:"Poseidon", m:1761},
+  {r:9, h:"Ruskin", m:1753},
+  {r:10, h:"MVY", m:1253},
+  {r:11, h:"sundayfunday", m:1143},
+  {r:12, h:"StachedPunk", m:949},
+  {r:13, h:"G9ralt", m:943},
+  {r:14, h:"Angol", m:896},
+  {r:15, h:"johndoe8891", m:879},
+  {r:16, h:"Giopetto", m:856},
+  {r:17, h:"6529er", m:838},
+  {r:18, h:"david", m:815},
+  {r:19, h:"diegorst", m:785},
+  {r:20, h:"lotsofreasons", m:784},
+  {r:21, h:"MaxMyEth", m:719},
+  {r:22, h:"arsonic", m:705},
+  {r:23, h:"SofaKingRekt", m:681},
+  {r:24, h:"blocknoob", m:666},
+  {r:25, h:"Dfarmer", m:626},
+  {r:26, h:"Thatmonke", m:626},
+  {r:27, h:"Fitzcarraldo", m:618},
+  {r:28, h:"GhostPepper", m:614},
+  {r:29, h:"Halving_Fun", m:611},
+  {r:30, h:"Dave", m:595},
+  {r:31, h:"Truffler", m:582},
+  {r:32, h:"dsanchesGM", m:580},
+  {r:33, h:"HugoFaz", m:579},
+  {r:34, h:"CaptainDerp", m:559},
+  {r:35, h:"jyppy", m:557},
+  {r:36, h:"6529Guardian", m:557},
+  {r:37, h:"Animated_6529", m:554},
+  {r:38, h:"Daimon", m:553},
+  {r:39, h:"lapislight", m:542},
+  {r:40, h:"RegularDad", m:541},
+  {r:41, h:"iwillfollow", m:541},
+  {r:42, h:"6529FundSZN2", m:541},
+  {r:43, h:"VonMises", m:541},
+  {r:44, h:"EzMonet", m:538},
+  {r:45, h:"6529FundSZN1", m:536},
+  {r:46, h:"BatSoupYum", m:530},
+  {r:47, h:"thememesmm", m:529},
+  {r:48, h:"krybharat", m:517},
+  {r:49, h:"sesamenoodles", m:509},
+  {r:50, h:"Northof80", m:500},
+  {r:51, h:"Vantekai", m:497},
+  {r:52, h:"monomesa", m:496},
+  {r:53, h:"6529FundSZN3", m:490},
+  {r:54, h:"MrB", m:488},
+  {r:55, h:"itsjpower", m:487},
+  {r:56, h:"dufucottage", m:487},
+  {r:57, h:"ACtheCollector", m:485},
+  {r:58, h:"Noone0x", m:484},
+  {r:59, h:"XLK8", m:484},
+  {r:60, h:"artblonkz", m:484},
+  {r:61, h:"dealer", m:483},
+  {r:62, h:"6529FundSZN4", m:482},
+  {r:63, h:"ThomScribner", m:482},
+  {r:64, h:"MSV", m:481},
+  {r:65, h:"MrPartyPeoples", m:481},
+  {r:66, h:"sqda", m:481},
+  {r:67, h:"prxt0", m:479},
+  {r:68, h:"brookr", m:475},
+  {r:69, h:"DarrenSRS", m:473},
+  {r:70, h:"Bloxperts", m:470},
+  {r:71, h:"Eric", m:467},
+  {r:72, h:"BBA", m:465},
+  {r:73, h:"TheCollection", m:464},
+  {r:74, h:"Synballein", m:458},
+  {r:75, h:"Conviction", m:457},
+  {r:76, h:"hashgrown", m:454},
+  {r:77, h:"memeblock", m:453},
+  {r:78, h:"Heather11666", m:446},
+  {r:79, h:"0x619", m:446},
+  {r:80, h:"skorch", m:427},
+  {r:81, h:"reno99", m:425},
+  {r:82, h:"SunRunner", m:423},
+  {r:83, h:"pandelic", m:419},
+  {r:84, h:"jpghodl", m:399},
+  {r:85, h:"MEMEOG", m:379},
+  {r:86, h:"knex_eth", m:360},
+  {r:87, h:"ricodemus", m:360},
+  {r:88, h:"Aman", m:357},
+  {r:89, h:"maybe", m:355},
+  {r:90, h:"intrepid", m:342},
+  {r:91, h:"dense", m:342},
+  {r:92, h:"ZODL", m:338},
+  {r:93, h:"degen", m:337},
+  {r:94, h:"papajdog", m:336},
+  {r:95, h:"solo", m:325},
+  {r:96, h:"0xCuttlefish", m:322},
+  {r:97, h:"seizerDAO", m:322},
+  {r:98, h:"hypnodoge", m:319},
+  {r:99, h:"hexum", m:318},
+  {r:100, h:"Sert", m:312},
+  {r:101, h:"cyborg", m:309},
+  {r:102, h:"para", m:308},
+  {r:103, h:"ogstatus", m:307},
+  {r:104, h:"Saltymim", m:305},
+  {r:105, h:"teexels", m:301},
+  {r:106, h:"sno", m:300},
+  {r:107, h:"000", m:298},
+  {r:108, h:"onegweitoday", m:293},
+  {r:109, h:"elbarto", m:293},
+  {r:110, h:"memeorize", m:292},
+  {r:111, h:"BlueFlame", m:287},
+  {r:112, h:"crunch", m:284},
+  {r:113, h:"8ird", m:276},
+  {r:114, h:"Kenshiro", m:275},
+  {r:115, h:"chrisroc", m:272},
+  {r:116, h:"SBY", m:272},
+  {r:117, h:"golden618", m:271},
+  {r:118, h:"Anonymoux", m:271},
+  {r:119, h:"VincentVanDough", m:271},
+  {r:120, h:"Gollum", m:270},
+  {r:121, h:"hukus", m:265},
+  {r:122, h:"mcc", m:265},
+  {r:123, h:"vuvuzelaela", m:265},
+  {r:124, h:"BigGameJames", m:263},
+  {r:125, h:"yaskravy", m:262},
+  {r:126, h:"grubnot", m:260},
+  {r:127, h:"soldmangachs", m:258},
+  {r:128, h:"OMdegen", m:252},
+  {r:129, h:"clicky2048", m:252},
+  {r:130, h:"MemesMoveMarket", m:251},
+  {r:131, h:"Kripp", m:250},
+  {r:132, h:"ScrappyT", m:247},
+  {r:133, h:"Rakesh", m:247},
+  {r:134, h:"kwzn", m:246},
+  {r:135, h:"100series", m:246},
+  {r:136, h:"drecrypted", m:241},
+  {r:137, h:"freecod", m:241},
+  {r:138, h:"MemesOutside", m:241},
+  {r:139, h:"Moonfront", m:240},
+  {r:140, h:"perilousvault", m:237},
+  {r:141, h:"TheHarvest", m:237},
+  {r:142, h:"RacBrasti", m:235},
+  {r:143, h:"legitfish", m:229},
+  {r:144, h:"Flong", m:228},
+  {r:145, h:"kardon", m:228},
+  {r:146, h:"GMM", m:228},
+  {r:147, h:"RealGino", m:227},
+  {r:148, h:"tacita", m:226},
+  {r:149, h:"dlanes1", m:224},
+  {r:150, h:"Firehat", m:223},
+  {r:151, h:"Filthy", m:222},
+  {r:152, h:"VOTE_FOR_MEMES", m:221},
+  {r:153, h:"chimpish", m:221},
+  {r:154, h:"AlphaverseCap", m:220},
+  {r:155, h:"MIM", m:220},
+  {r:156, h:"rothu", m:219},
+  {r:157, h:"covvboy", m:218},
+  {r:158, h:"CasaNUA", m:214},
+  {r:159, h:"Artismemeory", m:213},
+  {r:160, h:"Sibs", m:213},
+  {r:161, h:"sheltronica", m:213},
+  {r:162, h:"lmar33", m:211},
+  {r:163, h:"justanother", m:210},
+  {r:164, h:"Pinkos", m:210},
+  {r:165, h:"baiwei", m:210},
+  {r:166, h:"696", m:209},
+  {r:167, h:"apocalypse", m:209},
+  {r:168, h:"skywalker", m:208},
+  {r:169, h:"Flexis", m:207},
+  {r:170, h:"EpicVillage", m:204},
+  {r:171, h:"Koja", m:202},
+  {r:172, h:"NachoWeb3", m:201},
+  {r:173, h:"420", m:198},
+  {r:174, h:"longexposure", m:198},
+  {r:175, h:"Inceptionally", m:198},
+  {r:176, h:"hgypse", m:197},
+  {r:177, h:"James", m:196},
+  {r:178, h:"NedRyerson", m:195},
+  {r:179, h:"saucy", m:192},
+  {r:180, h:"chagozzino", m:190},
+  {r:181, h:"Paul", m:190},
+  {r:182, h:"SatishAcharya", m:190},
+  {r:183, h:"Hvala", m:189},
+  {r:184, h:"Suparno67", m:189},
+  {r:185, h:"0x31bed", m:185},
+  {r:186, h:"MD85NFT", m:184},
+  {r:187, h:"mememaxis", m:183},
+  {r:188, h:"kkostya", m:183},
+  {r:189, h:"crimsonovoidchk", m:183},
+  {r:190, h:"GoGreen", m:183},
+  {r:191, h:"Rabobi", m:181},
+  {r:192, h:"calikauai", m:181},
+  {r:193, h:"PeaceLandBread", m:181},
+  {r:194, h:"NotSoldmanGachs", m:180},
+  {r:195, h:"PizzaCheeks", m:180},
+  {r:196, h:"DrenFX", m:179},
+  {r:197, h:"Jedi69", m:179},
+  {r:198, h:"mayberedbeard", m:175},
+  {r:199, h:"ruintupturbo", m:174},
+  {r:200, h:"MagicNecessity", m:173},
+  {r:201, h:"JasonOPhoto", m:172},
+  {r:202, h:"VegasGuy", m:172},
+  {r:203, h:"Ilsindaco", m:171},
+  {r:204, h:"agnimax", m:168},
+  {r:205, h:"LukeCannon", m:167},
+  {r:206, h:"yyctrader", m:167},
+  {r:207, h:"mfer", m:164},
+  {r:208, h:"Nobody", m:161},
+  {r:209, h:"geekiebunny", m:161},
+  {r:210, h:"TyLekki", m:160},
+  {r:211, h:"cheesebiz", m:160},
+  {r:212, h:"t04d4418", m:160},
+  {r:213, h:"Flapoid", m:158},
+  {r:214, h:"Mikavirt", m:158},
+  {r:215, h:"Killian", m:156},
+  {r:216, h:"Bic", m:154},
+  {r:217, h:"MrOlives", m:154},
+  {r:218, h:"Zar", m:153},
+  {r:219, h:"OG_", m:152},
+  {r:220, h:"hamyao", m:152},
+  {r:221, h:"antifragile", m:152},
+  {r:222, h:"art_icu_late", m:152},
+  {r:223, h:"Sinzz", m:151},
+  {r:224, h:"ryku", m:150},
+  {r:225, h:"NLV", m:149},
+  {r:226, h:"Kenshiro_ALT", m:148},
+  {r:227, h:"Scobel", m:148},
+  {r:228, h:"rockshassa", m:147},
+  {r:229, h:"exlawyer", m:147},
+];
+const htb=document.getElementById('htbody');
+holders.forEach((h,i)=>{
+  const val=Math.round(h.m*MEME_USD), din=Math.round(val/NYC), py=(din/4).toFixed(1);
+  const em='🍽️'.repeat(Math.min(Math.round(din/5),40));
+  htb.innerHTML+=`<tr class="${i%2?'':'alt'}">
+    <td style="color:var(--grey);font-size:12px;">${h.r}</td>
+    <td style="font-weight:700;font-family:'Playfair Display',serif;">${h.h}</td>
+    <td class="r"><strong>${h.m.toLocaleString()}</strong></td>
+    <td class="r">$${val.toLocaleString()}</td>
+    <td class="r" style="color:var(--red);font-weight:700;">${din.toLocaleString()}</td>
+    <td class="r" style="color:var(--grey);">${py}</td>
+    <td class="dv">${em}</td>
+  </tr>`;
+});
+
+// ── FOREGONE DINING INFOGRAPHIC ──────────────────────────
+// ANDIG collective: top 500 holders, est. 85,000 meme cards
+// All held through 2025. GWM-185 = $185 per dinner
+// One dinner = 1 starter + 1 main + 1 dessert + 0.5 bottle wine pp
+const COLL_MEMES = 149091;
+const COLL_VALUE = COLL_MEMES * MEME_USD;   // total USD value held
+const GWM = 185;                              // global weighted mean dinner
+const DINNERS_FOREGONE = Math.round(COLL_VALUE / GWM);
+
+// Per dinner: 1 starter each (2), 1 main each (2), 1 dessert each (2), 1 bottle wine
+const STARTERS  = DINNERS_FOREGONE * 2;
+const MAINS     = DINNERS_FOREGONE * 2;
+const DESSERTS  = DINNERS_FOREGONE * 2;
+const BOTTLES   = DINNERS_FOREGONE * 1;  // 1 bottle per dinner for two
+
+function fmtN(n){ return n.toLocaleString(); }
+
+const ig = document.getElementById('infographic');
+ig.innerHTML = `
+<div style="background:white;border:1px solid var(--rule);overflow:hidden;margin-bottom:8px;">
+  <!-- Header bar -->
+  <div style="background:var(--dark);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+    <div>
+      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--salmon);margin-bottom:3px;">ANDIG Collective Loss Register · Top 250 Holders · March 2026</div>
+      <div style="font-family:'Playfair Display',serif;font-size:18px;color:white;font-weight:700;">What the Top 500 Holders Did Not Eat Last Year</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:1px;">Est. Aggregate Holdings</div>
+      <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--gold);font-weight:900;">149,091 memes</div>
+    </div>
+  </div>
+
+  <!-- Stat cards row -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--rule);">
+    ${[
+      {icon:'🥗', label:'Starters Not Eaten', val:fmtN(STARTERS), sub:'Two per dinner, none served', col:'#2B5A8B'},
+      {icon:'🍽️', label:'Main Courses Missed', val:fmtN(MAINS), sub:'Sent back unordered', col:'#B07700'},
+      {icon:'🍮', label:'Desserts Not Ordered', val:fmtN(DESSERTS), sub:'Sweet nothings, literally', col:'#7A0000'},
+      {icon:'🍷', label:'Wine Bottles Unopened', val:fmtN(BOTTLES), sub:'~${Math.round(BOTTLES/12).toLocaleString()} cases left on the shelf', col:'#3D7A3D'},
+    ].map((s,i)=>`
+      <div style="padding:18px 16px;${i<3?'border-right:1px solid var(--rule);':''}text-align:center;">
+        <div style="font-size:32px;margin-bottom:6px;">${s.icon}</div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--grey);margin-bottom:4px;">${s.label}</div>
+        <div style="font-family:'Playfair Display',serif;font-size:clamp(18px,2.5vw,28px);font-weight:900;color:${s.col};">${s.val}</div>
+        <div style="font-size:11px;color:var(--grey);font-style:italic;margin-top:3px;">${s.sub}</div>
+      </div>
+    `).join('')}
+  </div>
+
+  <!-- Visual icon rows -->
+  <div style="padding:18px 20px;border-bottom:1px solid var(--rule);">
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--grey);margin-bottom:8px;font-weight:700;">Total Dinners Foregone in 2025 — ${fmtN(DINNERS_FOREGONE)}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:2px;line-height:1;" id="icon-grid"></div>
+    <div style="font-size:11px;color:var(--grey);font-style:italic;margin-top:8px;">Each icon = 50 dinners. Based on GWM-185 global weighted mean dinner cost of $185.</div>
+  </div>
+
+  <!-- Comparative scale -->
+  <div style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--rule);">
+    <div style="background:white;padding:14px 16px;text-align:center;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--grey);margin-bottom:4px;">= Weekly dinners for</div>
+      <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:var(--dark);">${fmtN(Math.round(DINNERS_FOREGONE/52))}</div>
+      <div style="font-size:11px;color:var(--grey);font-style:italic;">people, for one full year</div>
+    </div>
+    <div style="background:white;padding:14px 16px;text-align:center;border-left:1px solid var(--rule);border-right:1px solid var(--rule);">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--grey);margin-bottom:4px;">= Daily dinners for</div>
+      <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:#7A0000;">${fmtN(Math.round(DINNERS_FOREGONE/365))}</div>
+      <div style="font-size:11px;color:var(--grey);font-style:italic;">people, every day of 2025</div>
+    </div>
+    <div style="background:white;padding:14px 16px;text-align:center;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--grey);margin-bottom:4px;">Wine: enough to fill</div>
+      <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:#3D7A3D;">${fmtN(Math.round(BOTTLES * 0.75 / 1000))}m³</div>
+      <div style="font-size:11px;color:var(--grey);font-style:italic;">of Burgundy, undrunk</div>
+    </div>
+  </div>
+
+  <!-- Editorial closer -->
+  <div style="padding:14px 20px;background:var(--lgrey);font-size:12.5px;color:var(--grey);font-style:italic;border-top:1px solid var(--rule);">
+    <strong style="color:var(--dark);font-style:normal;">The Dinner Desk notes:</strong> The figures above represent opportunity cost in the most human sense of that phrase. No blockchain record, however immutable, preserves the warmth of a table shared. ANDIG formally recommends remedial action.
+  </div>
+</div>`;
+
+// Icon grid: each icon = 50 dinners
+const iconGrid = document.getElementById('icon-grid');
+const iconCount = Math.min(Math.round(DINNERS_FOREGONE / 50), 200);
+for(let i=0;i<iconCount;i++){
+  const span = document.createElement('span');
+  span.style.fontSize = '14px';
+  span.title = '50 dinners';
+  span.textContent = '🍽️';
+  iconGrid.appendChild(span);
+}
+
+// ── D3 MAP ───────────────────────────────────────────────
+const tt=document.getElementById('tt');
+let proj, gpath, gsel;
+
+function initMap(){
+  const svgEl=document.getElementById('msv');
+  const W=svgEl.parentElement.clientWidth;
+  const H=Math.round(W*0.52);
+  svgEl.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svgEl.style.height=H+'px';
+
+  const svg=d3.select('#msv');
+  svg.selectAll('*').remove();
+
+  // ocean
+  svg.append('rect').attr('width',W).attr('height',H).attr('fill','#BDD4E4');
+
+  proj=d3.geoNaturalEarth1().scale(W/6.5).translate([W/2,H/2]);
+  gpath=d3.geoPath().projection(proj);
+
+  // graticule
+  svg.append('path').datum(d3.geoGraticule()())
+    .attr('fill','none').attr('stroke','#A8C0D0').attr('stroke-width','.25').attr('d',gpath);
+
+  gsel=svg.append('g');
+
+  d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(world=>{
+    const feat=topojson.feature(world,world.objects.countries);
+    const mesh=topojson.mesh(world,world.objects.countries,(a,b)=>a!==b);
+    gsel.selectAll('path').data(feat.features).join('path')
+      .attr('class','cpth').attr('d',gpath);
+    gsel.append('path').datum(mesh)
+      .attr('fill','none').attr('stroke','#A8A09A').attr('stroke-width','.3').attr('d',gpath);
+    drawPins();
+  }).catch(()=>{ drawPins(); });
+}
+
+function drawPins(){
+  gsel.selectAll('.pin').remove();
+  cities.forEach(c=>{
+    const pt=proj([c.lng,c.lat]);
+    if(!pt)return;
+    const t=tr(c.m);
+    const r=4+(c.d/maxD)*12;
+    gsel.append('circle').attr('class','pin')
+      .attr('cx',pt[0]).attr('cy',pt[1]).attr('r',r)
+      .attr('fill',t.c).attr('opacity',c.s?.72:.86)
+      .attr('stroke','rgba(255,255,255,.65)').attr('stroke-width',c.s?1.5:.7)
+      .attr('stroke-dasharray',c.s?'2,2':'none')
+      .style('cursor','pointer')
+      .on('mousemove',ev=>{
+        tt.style.display='block';
+        tt.style.left=(ev.clientX+14)+'px';
+        tt.style.top=(ev.clientY-14)+'px';
+        tt.innerHTML=`<strong>${c.flag} ${c.name}${c.s?' ★':''}</strong>${c.country}<br><span class="mv" style="font-size:16px;">🖼️ ${c.ms} memes</span><br><span style="font-size:11px;color:#aaa;">= $${c.d.toLocaleString()} per dinner</span><br><span style="color:${t.c};font-weight:700;">${t.l}</span><br><em style="font-size:11px;color:#aaa;">${c.note}</em>`;
+      })
+      .on('mouseleave',()=>tt.style.display='none');
+  });
+}
+
+function setMode(m,btn){
+  document.querySelectorAll('.btng button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  drawPins();
+}
+
+window.addEventListener('resize',()=>initMap());
+initMap();
+</script>
+</body>
+</html>

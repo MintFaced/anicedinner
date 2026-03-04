@@ -1,0 +1,11 @@
+{
+  "name": "andig-dinner-index",
+  "version": "1.0.0",
+  "description": "ANDIG — A Nice Dinner Index Global",
+  "scripts": {
+    "start": "npx serve . -p ${PORT:-3000}"
+  },
+  "dependencies": {
+    "serve": "^14.2.0"
+  }
+}
