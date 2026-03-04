@@ -831,16 +831,40 @@ function initMap(){
   }).catch(()=>{ drawPins(); });
 }
 
+// NZ CITIES
+cities.push(
+  {name:'Wellington',  country:'New Zealand',   flag:'🇳🇿', d:160, lat:-41.29, lng:174.78, note:'Windy City premium; coffee culture mandatory'},
+  {name:'Auckland',    country:'New Zealand',   flag:'🇳🇿', d:180, lat:-36.85, lng:174.76, note:'Harbour Bridge view surcharge'},
+  {name:"Hawk’s Bay", country:'New Zealand ★', flag:'🇳🇿', d:120, lat:-39.49, lng:176.91, s:1, note:'Wine country — the irony is not lost on us'}
+);
+cities.forEach(c=>{ c.m=c.d/MEME_USD; c.ms=c.m.toFixed(2); if(!c.note)c.note=''; });
+cities.sort((a,b)=>b.d-a.d);
+
+let colourMode = 'memes';
+
+function getPinColour(c) {
+  if (colourMode === 'usd') {
+    const pct = c.d / maxD;
+    if (pct > 0.85) return '#7A0000';
+    if (pct > 0.65) return '#CC4400';
+    if (pct > 0.45) return '#B07700';
+    if (pct > 0.25) return '#3D7A3D';
+    return '#2B5A8B';
+  }
+  return tr(c.m).c;
+}
+
 function drawPins(){
   gsel.selectAll('.pin').remove();
   cities.forEach(c=>{
     const pt=proj([c.lng,c.lat]);
     if(!pt)return;
     const t=tr(c.m);
+    const pinCol=getPinColour(c);
     const r=4+(c.d/maxD)*12;
     gsel.append('circle').attr('class','pin')
       .attr('cx',pt[0]).attr('cy',pt[1]).attr('r',r)
-      .attr('fill',t.c).attr('opacity',c.s?.72:.86)
+      .attr('fill',pinCol).attr('opacity',c.s?.72:.86)
       .attr('stroke','rgba(255,255,255,.65)').attr('stroke-width',c.s?1.5:.7)
       .attr('stroke-dasharray',c.s?'2,2':'none')
       .style('cursor','pointer')
@@ -848,13 +872,19 @@ function drawPins(){
         tt.style.display='block';
         tt.style.left=(ev.clientX+14)+'px';
         tt.style.top=(ev.clientY-14)+'px';
-        tt.innerHTML=`<strong>${c.flag} ${c.name}${c.s?' ★':''}</strong>${c.country}<br><span class="mv" style="font-size:16px;">🖼️ ${c.ms} memes</span><br><span style="font-size:11px;color:#aaa;">= $${c.d.toLocaleString()} per dinner</span><br><span style="color:${t.c};font-weight:700;">${t.l}</span><br><em style="font-size:11px;color:#aaa;">${c.note}</em>`;
+        const label=`<strong>${c.flag} ${c.name}${c.s?' ★':''}</strong>${c.country}<br>`
+          +`<span class="mv" style="font-size:16px;">🖼️ ${c.ms} memes</span><br>`
+          +`<span style="font-size:11px;color:#aaa;">= $${c.d.toLocaleString()} per dinner</span><br>`
+          +`<span style="color:${t.c};font-weight:700;">${t.l}</span><br>`
+          +`<em style="font-size:11px;color:#aaa;">${c.note}</em>`;
+        tt.innerHTML=label;
       })
       .on('mouseleave',()=>tt.style.display='none');
   });
 }
 
 function setMode(m,btn){
+  colourMode = m;
   document.querySelectorAll('.btng button').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
   drawPins();
